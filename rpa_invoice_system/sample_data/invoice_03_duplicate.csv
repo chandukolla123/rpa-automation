@@ -1,0 +1,4 @@
+invoice_number,vendor_name,vendor_id,po_number,invoice_date,due_date,payment_terms,subtotal,tax_amount,grand_total,description,quantity,unit_price,line_total,sku
+INV-2024-0101,Acme Supplies Inc,V001,PO-2024-001,2024-03-01,2024-03-31,Net 30,4200.00,336.00,4536.00,Copy Paper A4 (Box),50,42.00,2100.00,SKU-CPR-A4
+INV-2024-0101,Acme Supplies Inc,V001,PO-2024-001,2024-03-01,2024-03-31,Net 30,4200.00,336.00,4536.00,Ballpoint Pens (Box),30,14.00,420.00,SKU-PEN-BP
+INV-2024-0101,Acme Supplies Inc,V001,PO-2024-001,2024-03-01,2024-03-31,Net 30,4200.00,336.00,4536.00,Stapler Heavy Duty,20,84.00,1680.00,SKU-STP-HD

@@ -1,0 +1,9 @@
+vendor_id,vendor_name,contact_email,payment_terms,active
+V001,Acme Supplies Inc,ap@acmesupplies.com,Net 30,true
+V002,Global Distribution Co,billing@globaldist.com,Net 45,true
+V003,Metro Office Products,accounts@metroofficeprod.com,Net 30,true
+V004,Pacific Freight Solutions,invoices@pacificfreight.com,Net 15,true
+V005,Vertex Manufacturing LLC,ap@vertexmfg.com,Net 60,true
+V006,Cascade Logistics,billing@cascadelogistics.com,Net 30,true
+V007,Summit Tech Supplies,invoices@summittech.com,Net 30,true
+V008,Horizon Industrial,ar@horizonindustrial.com,Net 45,true

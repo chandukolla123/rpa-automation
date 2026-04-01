@@ -1,0 +1,9 @@
+po_number,vendor_id,vendor_name,issued_date,amount,status,description
+PO-2024-001,V001,Acme Supplies Inc,2024-01-05,4500.00,open,Office supplies Q1
+PO-2024-002,V002,Global Distribution Co,2024-01-10,8750.00,open,Warehouse equipment
+PO-2024-003,V003,Metro Office Products,2024-01-15,2100.00,open,Furniture restock
+PO-2024-004,V004,Pacific Freight Solutions,2024-01-20,15000.00,open,Freight contract Jan
+PO-2024-005,V005,Vertex Manufacturing LLC,2024-02-01,6300.00,open,Raw materials batch
+PO-2024-006,V001,Acme Supplies Inc,2024-02-10,3200.00,closed,Seasonal promo items
+PO-2024-007,V006,Cascade Logistics,2024-02-15,9800.00,open,Distribution services
+PO-2024-008,V007,Summit Tech Supplies,2024-03-01,22500.00,open,IT hardware refresh

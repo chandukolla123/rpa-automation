@@ -1,0 +1,4 @@
+invoice_number,vendor_name,vendor_id,po_number,invoice_date,due_date,payment_terms,subtotal,tax_amount,grand_total,description,quantity,unit_price,line_total,sku
+INV-2024-0202,Global Distribution Co,V002,PO-2024-002,2024-03-05,2024-04-19,Net 45,8750.00,700.00,9999.99,Pallet Jack Electric,2,2500.00,5000.00,SKU-PJE-001
+INV-2024-0202,Global Distribution Co,V002,PO-2024-002,2024-03-05,2024-04-19,Net 45,8750.00,700.00,9999.99,Shelving Unit 6ft,5,600.00,3000.00,SKU-SHL-6FT
+INV-2024-0202,Global Distribution Co,V002,PO-2024-002,2024-03-05,2024-04-19,Net 45,8750.00,700.00,9999.99,Forklift Attachment,1,999.00,999.00,SKU-FLA-X1

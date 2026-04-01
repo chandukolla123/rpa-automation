@@ -1,0 +1,4 @@
+invoice_number,vendor_name,vendor_id,po_number,invoice_date,due_date,payment_terms,subtotal,tax_amount,grand_total,description,quantity,unit_price,line_total,sku
+INV-2024-0508,Pacific Freight Solutions,V004,PO-2024-004,2024-03-12,2024-03-27,Net 15,14000.00,1120.00,15120.00,Long-Haul Freight Route A,4,2500.00,10000.00,FRT-LH-A
+INV-2024-0508,Pacific Freight Solutions,V004,PO-2024-004,2024-03-12,2024-03-27,Net 15,14000.00,1120.00,15120.00,Expedited Delivery Surcharge,4,500.00,2000.00,FRT-EXP-SUR
+INV-2024-0508,Pacific Freight Solutions,V004,PO-2024-004,2024-03-12,2024-03-27,Net 15,14000.00,1120.00,15120.00,Fuel Adjustment Fee,1,2000.00,2000.00,FRT-FUEL-ADJ

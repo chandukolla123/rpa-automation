@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% block title %}Review Invoice #{{ invoice.id }}{% endblock %}
+
+{% block content %}
+<div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+  <h2 style="font-size:1.2rem;">
+    Invoice #{{ invoice.invoice_number or invoice.id }}
+    <span class="badge badge-{{ invoice.status.value }}">
+      {{ invoice.status.value.replace('_',' ').title() }}
+    </span>
+  </h2>
+  <a href="{{ url_for('index') }}" class="btn btn-primary btn-sm" style="margin-left:auto;">← Back</a>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+
+  <!-- Left: extracted data + errors -->
+  <div>
+    <!-- Validation Issues -->
+    {% if invoice.validation_errors %}
+    <div class="card" style="border-left:4px solid var(--danger);">
+      <div class="section-title" style="color:var(--danger);">Validation Errors</div>
+      {% for err in invoice.validation_errors %}
+        <div class="error-box">
+          <strong>{{ err.type }}</strong>
+          {% if err.field %} — <em>{{ err.field }}</em>{% endif %}:<br>
+          {{ err.message }}
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if invoice.validation_warnings %}
+    <div class="card" style="border-left:4px solid var(--warning);">
+      <div class="section-title" style="color:var(--warning);">Warnings</div>
+      {% for w in invoice.validation_warnings %}
+        <div class="warn-box">
+          <strong>{{ w.type }}</strong>
+          {% if w.field %} — <em>{{ w.field }}</em>{% endif %}:<br>
+          {{ w.message }}
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Field correction form -->
+    <div class="card">
+      <div class="section-title">Extracted Data
+        <span style="font-size:.75rem;font-weight:400;color:#7f8c8d;">
+          Confidence: {{ "%.0f"|format((invoice.confidence_score or 0) * 100) }}%
+        </span>
+      </div>
+      <form method="POST" action="{{ url_for('correct_invoice', invoice_id=invoice.id) }}">
+        <table style="width:100%;font-size:.875rem;">
+          <tbody>
+          {% set fields = [
+            ('invoice_number','Invoice Number'), ('vendor_name','Vendor Name'),
+            ('vendor_id','Vendor ID'), ('po_number','PO Number'),
+            ('payment_terms','Payment Terms'),
+          ] %}
+          {% for fname, flabel in fields %}
+          <tr>
+            <td style="width:40%;color:#7f8c8d;padding:.4rem .3rem;">{{ flabel }}</td>
+            <td style="padding:.3rem;">
+              <input type="text" name="{{ fname }}"
+                     value="{{ invoice[fname] if invoice[fname] is not none else '' }}"
+                     style="width:100%;"
+                     {% if invoice.status.value in ('auto_approved','human_approved','rejected') %}disabled{% endif %}>
+            </td>
+          </tr>
+          {% endfor %}
+          <tr>
+            <td style="color:#7f8c8d;padding:.4rem .3rem;">Invoice Date</td>
+            <td style="padding:.3rem;">
+              <input type="text" name="invoice_date"
+                     value="{{ invoice.invoice_date.strftime('%Y-%m-%d') if invoice.invoice_date else '' }}"
+                     style="width:100%;"
+                     {% if invoice.status.value in ('auto_approved','human_approved','rejected') %}disabled{% endif %}>
+            </td>
+          </tr>
+          <tr>
+            <td style="color:#7f8c8d;padding:.4rem .3rem;">Due Date</td>
+            <td style="padding:.3rem;">
+              <input type="text" name="due_date"
+                     value="{{ invoice.due_date.strftime('%Y-%m-%d') if invoice.due_date else '' }}"
+                     style="width:100%;"
+                     {% if invoice.status.value in ('auto_approved','human_approved','rejected') %}disabled{% endif %}>
+            </td>
+          </tr>
+          {% for fname, flabel in [('subtotal','Subtotal'),('tax_amount','Tax'),('grand_total','Grand Total')] %}
+          <tr>
+            <td style="color:#7f8c8d;padding:.4rem .3rem;">{{ flabel }}</td>
+            <td style="padding:.3rem;">
+              <input type="text" name="{{ fname }}"
+                     value="{{ '%.2f'|format(invoice[fname]) if invoice[fname] is not none else '' }}"
+                     style="width:100%;"
+                     {% if invoice.status.value in ('auto_approved','human_approved','rejected') %}disabled{% endif %}>
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+
+        {% if invoice.status.value not in ('auto_approved', 'human_approved', 'rejected') %}
+        <div style="margin-top:.75rem;display:flex;gap:.5rem;align-items:center;">
+          <input type="text" name="actor" placeholder="Your name" style="width:150px;">
+          <button type="submit" class="btn btn-primary btn-sm">Save Corrections</button>
+        </div>
+        {% endif %}
+      </form>
+    </div>
+
+    <!-- Line items -->
+    {% if line_items %}
+    <div class="card">
+      <div class="section-title">Line Items</div>
+      <table>
+        <thead>
+          <tr><th>#</th><th>Description</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr>
+        </thead>
+        <tbody>
+        {% for li in line_items %}
+          <tr>
+            <td>{{ li.line_number or loop.index }}</td>
+            <td>{{ li.description or "—" }}</td>
+            <td>{{ li.quantity }}</td>
+            <td>${{ "%.2f"|format(li.unit_price or 0) }}</td>
+            <td>${{ "%.2f"|format(li.line_total or 0) }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Right: approve/reject + audit + preview -->
+  <div>
+    <!-- Actions -->
+    {% if invoice.status.value not in ('human_approved', 'rejected') %}
+    <div class="card">
+      <div class="section-title">Actions</div>
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+        <form method="POST" action="{{ url_for('approve_invoice', invoice_id=invoice.id) }}"
+              style="display:flex;gap:.5rem;align-items:center;">
+          <input type="text" name="actor" placeholder="Your name" style="width:130px;">
+          <button type="submit" class="btn btn-success">✓ Approve</button>
+        </form>
+        <form method="POST" action="{{ url_for('reject_invoice', invoice_id=invoice.id) }}"
+              style="display:flex;gap:.5rem;align-items:center;">
+          <input type="text" name="actor" placeholder="Your name" style="width:130px;">
+          <input type="text" name="reason" placeholder="Rejection reason" style="width:160px;">
+          <button type="submit" class="btn btn-danger">✗ Reject</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Image preview -->
+    {% if preview_url %}
+    <div class="card">
+      <div class="section-title">Original Invoice</div>
+      <img src="{{ preview_url }}" style="max-width:100%;border:1px solid #eee;border-radius:4px;">
+    </div>
+    {% else %}
+    <div class="card" style="color:#aaa;font-size:.85rem;">
+      <div class="section-title">Original File</div>
+      <code>{{ invoice.source_file }}</code>
+    </div>
+    {% endif %}
+
+    <!-- Audit trail -->
+    <div class="card">
+      <div class="section-title">Audit Trail</div>
+      <table style="font-size:.8rem;">
+        <thead><tr><th>Time</th><th>Action</th><th>Actor</th><th>Result</th></tr></thead>
+        <tbody>
+        {% for log in audit_logs|sort(attribute='timestamp') %}
+          <tr>
+            <td style="white-space:nowrap;">{{ log.timestamp.strftime('%m/%d %H:%M:%S') }}</td>
+            <td>{{ log.action }}</td>
+            <td>{{ log.actor }}</td>
+            <td>
+              <span style="color:{% if log.result == 'SUCCESS' %}var(--success)
+                                  {% elif log.result == 'FAILURE' %}var(--danger)
+                                  {% else %}var(--warning){% endif %}">
+                {{ log.result }}
+              </span>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4" style="color:#aaa;">No audit entries yet.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Correction history -->
+    {% if corrections %}
+    <div class="card">
+      <div class="section-title">Correction History</div>
+      <table style="font-size:.8rem;">
+        <thead><tr><th>Time</th><th>Field</th><th>Old</th><th>New</th><th>By</th></tr></thead>
+        <tbody>
+        {% for c in corrections %}
+          <tr>
+            <td>{{ c.timestamp.strftime('%m/%d %H:%M') }}</td>
+            <td>{{ c.field_name }}</td>
+            <td style="color:var(--danger)">{{ c.old_value }}</td>
+            <td style="color:var(--success)">{{ c.new_value }}</td>
+            <td>{{ c.corrected_by }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

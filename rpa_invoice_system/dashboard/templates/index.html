@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — RPA Invoice System{% endblock %}
+
+{% block content %}
+<h2 style="margin-bottom:1rem;font-size:1.35rem;">Today's Summary
+  <small style="font-size:.75rem;color:#7f8c8d;font-weight:400;">{{ stats.date }}</small>
+</h2>
+
+<!-- KPI cards -->
+<div class="stat-grid" style="margin-bottom:1.5rem;">
+  <div class="stat-card">
+    <div class="num" style="color:var(--primary)">{{ stats.total }}</div>
+    <div class="lbl">Total Invoices</div>
+  </div>
+  <div class="stat-card">
+    <div class="num" style="color:var(--success)">{{ stats.auto_approved }}</div>
+    <div class="lbl">Auto-Approved</div>
+  </div>
+  <div class="stat-card">
+    <div class="num" style="color:var(--warning)">{{ stats.flagged }}</div>
+    <div class="lbl">Flagged</div>
+  </div>
+  <div class="stat-card">
+    <div class="num" style="color:#2980b9">{{ stats.human_approved }}</div>
+    <div class="lbl">Human Approved</div>
+  </div>
+  <div class="stat-card">
+    <div class="num" style="color:var(--danger)">{{ stats.rejected }}</div>
+    <div class="lbl">Rejected</div>
+  </div>
+</div>
+
+<!-- Flagged invoices -->
+{% if flagged %}
+<div class="card">
+  <div class="section-title" style="color:var(--danger);">
+    ⚠ Flagged — Requires Review ({{ flagged|length }})
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Invoice #</th><th>Vendor</th><th>PO #</th>
+        <th>Total</th><th>Errors</th><th>Received</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for inv in flagged %}
+      <tr>
+        <td>{{ inv.id }}</td>
+        <td><strong>{{ inv.invoice_number or "—" }}</strong></td>
+        <td>{{ inv.vendor_name or "—" }}</td>
+        <td>{{ inv.po_number or "—" }}</td>
+        <td>${{ "%.2f"|format(inv.grand_total or 0) }}</td>
+        <td>
+          {% if inv.validation_errors %}
+            <span style="color:var(--danger);font-size:.8rem">
+              {{ inv.validation_errors|length }} error(s)
+            </span>
+          {% endif %}
+          {% if inv.validation_warnings %}
+            <span style="color:var(--warning);font-size:.8rem;margin-left:.3rem">
+              {{ inv.validation_warnings|length }} warning(s)
+            </span>
+          {% endif %}
+        </td>
+        <td style="font-size:.8rem;color:#7f8c8d">
+          {{ inv.received_at.strftime('%m/%d %H:%M') if inv.received_at else "—" }}
+        </td>
+        <td>
+          <a href="{{ url_for('review_invoice', invoice_id=inv.id) }}"
+             class="btn btn-warning btn-sm">Review</a>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- Recent invoices -->
+<div class="card">
+  <div class="section-title">All Recent Invoices</div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Invoice #</th><th>Vendor</th><th>Total</th>
+        <th>Status</th><th>Confidence</th><th>Received</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for inv in recent %}
+      <tr>
+        <td>{{ inv.id }}</td>
+        <td>{{ inv.invoice_number or "—" }}</td>
+        <td>{{ inv.vendor_name or "—" }}</td>
+        <td>${{ "%.2f"|format(inv.grand_total or 0) }}</td>
+        <td>
+          <span class="badge badge-{{ inv.status.value if inv.status else 'pending' }}">
+            {{ inv.status.value.replace('_',' ').title() if inv.status else "Pending" }}
+          </span>
+        </td>
+        <td>
+          {% if inv.confidence_score is not none %}
+            <span style="color:{% if inv.confidence_score < 0.75 %}var(--danger)
+                                {% elif inv.confidence_score < 0.9 %}var(--warning)
+                                {% else %}var(--success){% endif %}">
+              {{ "%.0f"|format(inv.confidence_score * 100) }}%
+            </span>
+          {% else %}—{% endif %}
+        </td>
+        <td style="font-size:.8rem;color:#7f8c8d">
+          {{ inv.received_at.strftime('%m/%d %H:%M') if inv.received_at else "—" }}
+        </td>
+        <td>
+          <a href="{{ url_for('review_invoice', invoice_id=inv.id) }}"
+             class="btn btn-primary btn-sm">View</a>
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="8" style="text-align:center;color:#aaa;padding:2rem;">
+        No invoices yet. Drop files into <code>storage/inbox/</code> to begin.
+      </td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Report generation -->
+<div class="card" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+  <strong style="font-size:.9rem;">Generate Daily Report:</strong>
+  <form method="POST" action="{{ url_for('generate_report') }}" style="display:flex;gap:.5rem;align-items:center;">
+    <input type="date" name="date" value="{{ stats.date }}">
+    <button type="submit" class="btn btn-primary btn-sm">Generate PDF + CSV</button>
+  </form>
+  <span style="font-size:.8rem;color:#7f8c8d">Reports saved to <code>reports/output/</code></span>
+</div>
+{% endblock %}
